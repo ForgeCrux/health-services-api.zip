@@ -20,7 +20,7 @@ services:
       - team:ps-asset-team
       - app:health-services-api
     routes:
-      - name: health-services-api-get-health-services-api
+      - name: health-services-api-get-healthservices
         protocols:
           - https
           - http
@@ -29,13 +29,13 @@ services:
         hosts:
           - google.com
         paths:
-          - /v1/health-services-api
+          - /v1/healthservices
         strip_path: true
         preserve_host: false
         https_redirect_status_code: 426
         tags:
           - env:dev
-      - name: health-services-api-post-health-services-api
+      - name: health-services-api-post-healthservices
         protocols:
           - https
           - http
@@ -44,13 +44,13 @@ services:
         hosts:
           - google.com
         paths:
-          - /v1/health-services-api
+          - /v1/healthservices
         strip_path: true
         preserve_host: false
         https_redirect_status_code: 426
         tags:
           - env:dev
-      - name: health-services-api-get-health-services-api-id
+      - name: health-services-api-get-healthservices-id
         protocols:
           - https
           - http
@@ -59,7 +59,7 @@ services:
         hosts:
           - google.com
         paths:
-          - /v1/health-services-api/:id
+          - /v1/healthservices/:id
         strip_path: true
         preserve_host: false
         https_redirect_status_code: 426
@@ -71,7 +71,73 @@ services:
 ########################################################
 
 plugins:
-  []
+  - name: rate-limiting
+    enabled: true
+    protocols:
+      - http
+      - https
+    config:
+      minute: 100
+      hour: 5000
+      policy: local
+      fault_tolerant: true
+      hide_client_headers: false
+      error_code: 429
+      error_message: API rate limit exceeded
+    tags:
+      - global
+      - rate-limit
+  - name: key-auth
+    config:
+      key_names:
+        - apikey
+      key_in_header: true
+      key_in_query: true
+      hide_credentials: true
+  - name: jwt
+    config:
+      uri_param_names:
+        - jwt
+      cookie_names:
+        []
+      header_names:
+        - Authorization
+      key_claim_name: iss
+      secret_is_base64: false
+      claims_to_verify:
+        - exp
+      anonymous: null
+      run_on_preflight: true
+      maximum_expiration: 0
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+      exposed_headers:
+        - X-Auth-Token
+      credentials: true
+      max_age: 3600
+      preflight_continue: false
+  - name: ip-restriction
+    config:
+      allow:
+        - 127.0.0.1
+        - 10.0.0.0/8
+        - 192.168.0.0/16
+      deny: null
+      status: 403
+      message: Your IP is not allowed
 
 ########################################################
 # UPSTREAMS + TARGETS

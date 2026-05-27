@@ -72,6 +72,7 @@ services:
 
 plugins:
   - name: rate-limiting
+    service: health-services-api
     enabled: true
     protocols:
       - http
@@ -88,6 +89,7 @@ plugins:
       - service
       - rate-limit
   - name: key-auth
+    service: health-services-api
     config:
       key_names:
         - apikey
@@ -95,6 +97,7 @@ plugins:
       key_in_query: true
       hide_credentials: true
   - name: jwt
+    service: health-services-api
     config:
       uri_param_names:
         - jwt
@@ -110,6 +113,7 @@ plugins:
       run_on_preflight: true
       maximum_expiration: 0
   - name: cors
+    service: health-services-api
     config:
       origins:
         - "*"
@@ -130,6 +134,7 @@ plugins:
       max_age: 3600
       preflight_continue: false
   - name: ip-restriction
+    service: health-services-api
     config:
       allow:
         - 127.0.0.1
